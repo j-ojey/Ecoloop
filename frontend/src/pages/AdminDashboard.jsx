@@ -1,0 +1,156 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar, Pie } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await axios.get('/api/admin/stats');
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) return <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading analytics...</div>;
+  if (!stats) return <div className="text-center py-12 text-red-500">Failed to load statistics</div>;
+
+  const categoryData = {
+    labels: stats.itemsByCategory.map(c => c._id),
+    datasets: [{
+      label: 'Items by Category',
+      data: stats.itemsByCategory.map(c => c.count),
+      backgroundColor: [
+        'rgba(14, 165, 164, 0.8)',
+        'rgba(245, 158, 11, 0.8)',
+        'rgba(239, 68, 68, 0.8)',
+        'rgba(139, 92, 246, 0.8)',
+        'rgba(16, 185, 129, 0.8)',
+        'rgba(59, 130, 246, 0.8)',
+        'rgba(236, 72, 153, 0.8)',
+      ],
+      borderColor: [
+        'rgb(14, 165, 164)',
+        'rgb(245, 158, 11)',
+        'rgb(239, 68, 68)',
+        'rgb(139, 92, 246)',
+        'rgb(16, 185, 129)',
+        'rgb(59, 130, 246)',
+        'rgb(236, 72, 153)',
+      ],
+      borderWidth: 2,
+    }]
+  };
+
+  const priceTypeData = {
+    labels: stats.itemsByPriceType.map(p => p._id),
+    datasets: [{
+      label: 'Distribution',
+      data: stats.itemsByPriceType.map(p => p.count),
+      backgroundColor: [
+        'rgba(16, 185, 129, 0.8)',
+        'rgba(245, 158, 11, 0.8)',
+        'rgba(59, 130, 246, 0.8)',
+      ],
+      borderColor: [
+        'rgb(16, 185, 129)',
+        'rgb(245, 158, 11)',
+        'rgb(59, 130, 246)',
+      ],
+      borderWidth: 2,
+    }]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+      },
+    },
+  };
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-2 dark:text-white">Admin Dashboard</h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-8">Platform analytics and statistics</p>
+      
+      {/* Key Metrics */}
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="card text-center bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20">
+          <h3 className="text-4xl font-bold text-primary mb-2">{stats.totalUsers}</h3>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Total Users</p>
+        </div>
+        <div className="card text-center bg-gradient-to-br from-accent/10 to-accent/5 border-2 border-accent/20">
+          <h3 className="text-4xl font-bold text-accent mb-2">{stats.totalItems}</h3>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Items Posted</p>
+        </div>
+        <div className="card text-center bg-gradient-to-br from-green-500/10 to-green-500/5 border-2 border-green-500/20">
+          <h3 className="text-4xl font-bold text-green-600 dark:text-green-500 mb-2">{stats.totalMessages}</h3>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Messages Sent</p>
+        </div>
+        <div className="card text-center bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-2 border-purple-500/20">
+          <h3 className="text-4xl font-bold text-purple-600 dark:text-purple-500 mb-2">{Math.round(stats.ecoPointsStats.total)}</h3>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Total Eco-Points</p>
+        </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="card">
+          <h2 className="font-bold text-xl mb-4 dark:text-white">📊 Items by Category</h2>
+          <Bar data={categoryData} options={chartOptions} />
+        </div>
+        <div className="card">
+          <h2 className="font-bold text-xl mb-4 dark:text-white">💰 Price Type Distribution</h2>
+          <Pie data={priceTypeData} options={chartOptions} />
+        </div>
+      </div>
+
+      {/* Top Contributors */}
+      <div className="card">
+        <h2 className="font-bold text-xl mb-4 dark:text-white">🏆 Top Contributors</h2>
+        <div className="space-y-3">
+          {stats.topContributors.map((user, idx) => (
+            <div key={user._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">
+                  {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🏅'}
+                </span>
+                <div>
+                  <p className="font-semibold dark:text-white">{user.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Rank #{idx + 1}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-primary">{user.ecoPoints}</p>
+                <p className="text-xs text-gray-500">eco-points</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
