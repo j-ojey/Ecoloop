@@ -50,6 +50,9 @@ export default function Login() {
             {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>}
             <button type="submit" className="btn-primary w-full">Sign In</button>
           </form>
+          <div className="text-center mt-4">
+            <Link to="/forgot-password" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary">Forgot your password?</Link>
+          </div>
           <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">Don't have an account? <Link to="/register" className="text-primary font-semibold hover:underline">Sign up</Link></p>
         </div>
       </div>
