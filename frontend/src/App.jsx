@@ -17,6 +17,7 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 import Preview from './pages/Preview.jsx';
 import EditItem from './pages/EditItem.jsx';
 import Chatbot from './pages/Chatbot.jsx';
+import Profile from './pages/Profile.jsx';
 
 function Private({ children }) {
   const { token } = useAuth();
@@ -37,7 +38,7 @@ function Layout({ children }) {
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-primary dark:text-primary flex items-center gap-1">
-            {!token && "< "}
+            {!token && "← "}
             🌿 EcoLoop
           </Link>
           <nav className="flex gap-6 items-center">
@@ -52,8 +53,8 @@ function Layout({ children }) {
             {token ? (
               <div className="flex gap-3 items-center">
                 <span className="text-sm text-gray-600 dark:text-gray-400">{user?.name}</span>
+                <Link to="/profile" className="btn-secondary text-sm">Profile</Link>
                 <Link to="/my" className="btn-secondary text-sm">My Items</Link>
-                <button onClick={logout} className="btn-ghost text-sm">Logout</button>
               </div>
             ) : (
               <div className="flex gap-2">
@@ -107,6 +108,7 @@ export default function App() {
           <Route path="/messages" element={<Private><Messages /></Private>} />
           <Route path="/chatbot" element={<Private><Chatbot /></Private>} />
           <Route path="/leaderboard" element={<Private><Leaderboard /></Private>} />
+          <Route path="/profile" element={<Private><Profile /></Private>} />
           <Route path="/admin" element={<Private><AdminDashboard /></Private>} />
         </Routes>
         </Layout>

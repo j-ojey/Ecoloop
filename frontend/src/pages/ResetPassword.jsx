@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { api } from '../services/api.js';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 export default function ResetPassword() {
   const { token } = useParams();
@@ -28,8 +29,8 @@ export default function ResetPassword() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
@@ -67,30 +68,22 @@ export default function ResetPassword() {
         <div className="card">
           <h1 className="text-3xl font-bold text-center mb-8 dark:text-white">Reset Password</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">New Password</label>
-              <input
-                type="password"
-                className="input-field"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password</label>
-              <input
-                type="password"
-                className="input-field"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
+            <PasswordInput
+              label="New Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              showStrength={true}
+              minLength={8}
+            />
+            <PasswordInput
+              label="Confirm Password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              required
+              confirmValue={password}
+              minLength={8}
+            />
             <button type="submit" className="btn-primary w-full" disabled={loading}>
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>

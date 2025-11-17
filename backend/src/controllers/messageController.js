@@ -17,7 +17,13 @@ export const getMessagesForUser = async (req, res) => {
   try {
     const userId = req.params.userId;
     if (userId !== req.user.id) return res.status(403).json({ message: 'Forbidden' });
-    const messages = await Message.find({ $or: [ { senderId: userId }, { receiverId: userId } ] }).sort({ createdAt: -1 });
+    const messages = await Message.find({
+      $or: [{ senderId: userId }, { receiverId: userId }]
+    })
+      .sort({ createdAt: -1 })
+      .populate('senderId', 'name')
+      .populate('receiverId', 'name')
+      .populate('itemId', 'title');
     res.json(messages);
   } catch (e) {
     res.status(500).json({ message: 'Server error', error: e.message });

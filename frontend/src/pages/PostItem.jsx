@@ -8,6 +8,32 @@ const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
+// Carbon savings estimates in kg CO2 per item category
+const CARBON_SAVINGS = {
+  Electronics: 50,
+  Furniture: 30,
+  Clothing: 5,
+  Clothes: 5,
+  Books: 2,
+  Toys: 3,
+  'Home & Garden': 10,
+  Sports: 8,
+  Other: 5
+};
+
+// Calculate eco-points based on CO2 savings
+const calculateEcoPoints = (category, action = 'create') => {
+  const co2Saved = CARBON_SAVINGS[category] || 5;
+
+  if (action === 'create') {
+    return Math.max(1, Math.floor(co2Saved / 2));
+  } else if (action === 'complete') {
+    return Math.max(5, co2Saved);
+  }
+
+  return 0;
+};
+
 async function getUploadSignature() {
   const res = await fetch(`${API_BASE}/api/uploads/signature`, { method: 'POST' });
   return res.json();
@@ -50,7 +76,8 @@ export default function PostItem() {
         };
       }
       await api.post('/api/items', body, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success('Item posted successfully! +10 eco-points earned! 🌱');
+      const ecoPointsEarned = calculateEcoPoints(form.category, 'create');
+      toast.success(`Item posted successfully! +${ecoPointsEarned} eco-points earned for saving ~${CARBON_SAVINGS[form.category] || 5}kg CO₂! 🌱`);
       window.location.href = '/discover';
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to post item');
@@ -98,6 +125,30 @@ export default function PostItem() {
                 <option>Sell</option>
               </select>
             </div>
+          </div>
+          
+          {/* Eco Points Preview */}
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <h3 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+              🌱 Environmental Impact Preview
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-green-700 dark:text-green-300">CO₂ Saved</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  ~{CARBON_SAVINGS[form.category] || 5}kg
+                </p>
+              </div>
+              <div>
+                <p className="text-green-700 dark:text-green-300">Eco Points Earned</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  +{calculateEcoPoints(form.category, 'create')}
+                </p>
+              </div>
+            </div>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+              Complete exchange/sale to earn +{calculateEcoPoints(form.category, 'complete')} more points!
+            </p>
           </div>
           {form.priceType === 'Sell' && (
             <div>

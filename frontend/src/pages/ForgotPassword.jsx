@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { api } from '../services/api.js';
+import FormInput from '../components/FormInput.jsx';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -34,7 +35,9 @@ export default function ForgotPassword() {
             <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
               The link will expire in 1 hour. Check your spam folder if you don't see it.
             </p>
-            <Link to="/login" className="btn-primary">Back to Login</Link>
+            <Link to="/login" className="btn-primary inline-flex items-center gap-2">
+              ← Back to Login
+            </Link>
           </div>
         </div>
       </div>
@@ -50,17 +53,15 @@ export default function ForgotPassword() {
             Enter your email address and we'll send you a link to reset your password.
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <input
-                type="email"
-                className="input-field"
-                placeholder="you@example.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
+            <FormInput
+              label="Email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              validation={{ type: 'email' }}
+            />
             <button type="submit" className="btn-primary w-full" disabled={loading}>
               {loading ? 'Sending...' : 'Send Reset Link'}
             </button>

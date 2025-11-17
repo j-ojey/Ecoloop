@@ -1,5 +1,6 @@
 import { Item } from '../models/Item.js';
 import { User } from '../models/User.js';
+import { calculateEcoPoints } from '../utils/ecoPoints.js';
 
 export const createItem = async (req, res) => {
   try {
@@ -15,8 +16,9 @@ export const createItem = async (req, res) => {
       imageUrl,
       location: { coordinates: lng && lat ? [lng, lat] : undefined }
     });
-    // Award eco-points for contributing an item
-    await User.findByIdAndUpdate(req.user.id, { $inc: { ecoPoints: 10 } });
+    // Award eco-points based on CO2 savings for contributing an item
+    const ecoPoints = calculateEcoPoints(category, 'create');
+    await User.findByIdAndUpdate(req.user.id, { $inc: { ecoPoints } });
     res.status(201).json(item);
   } catch (e) {
     res.status(500).json({ message: 'Server error', error: e.message });
@@ -139,6 +141,41 @@ export const getRecommendations = async (req, res) => {
     }
     
     res.json(recommendations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateItemStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    if (!['available', 'sold', 'exchanged'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const item = await Item.findById(id);
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+
+    // Check ownership
+    if (item.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to update this item' });
+    }
+
+    item.status = status;
+    await item.save();
+
+    // Award eco-points based on CO2 savings for successful exchange/sale
+    if (status === 'sold' || status === 'exchanged') {
+      const ecoPoints = calculateEcoPoints(item.category, 'complete');
+      await User.findByIdAndUpdate(req.user.id, { $inc: { ecoPoints } });
+    }
+
+    res.json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -8,6 +8,7 @@ const itemSchema = new mongoose.Schema({
   condition: { type: String, enum: ['New', 'Good', 'Used'], default: 'Used' },
   priceType: { type: String, enum: ['Free', 'Exchange', 'Sell'], required: true },
   price: { type: Number, default: 0 },
+  status: { type: String, enum: ['available', 'exchanged', 'sold'], default: 'available' },
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now },
   location: {

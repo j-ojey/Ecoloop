@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
+import FormInput from '../components/FormInput.jsx';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -36,18 +38,32 @@ export default function Register() {
         <div className="card">
           <h1 className="text-3xl font-bold text-center mb-8 dark:text-white">Join the movement</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Full name</label>
-              <input type="text" className="input-field" placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <input type="email" className="input-field" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <input type="password" className="input-field" placeholder="••••••••" value={password} onChange={e=>setPassword(e.target.value)} required />
-            </div>
+            <FormInput
+              label="Full name"
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Your full name"
+              required
+              validation={{ type: 'name' }}
+            />
+            <FormInput
+              label="Email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              validation={{ type: 'email' }}
+            />
+            <PasswordInput
+              label="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              showStrength={true}
+              minLength={8}
+            />
             {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>}
             <button type="submit" className="btn-primary w-full">Create account</button>
           </form>

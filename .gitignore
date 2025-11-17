@@ -7,4 +7,5 @@ logs/
 dist/
 build/
 .DS_Store
-.vscode/   
+.vscode/
+Necessities/

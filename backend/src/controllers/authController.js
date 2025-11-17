@@ -1,13 +1,95 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { User } from '../models/User.js';
+import { Item } from '../models/Item.js';
 import { signToken } from '../utils/jwt.js';
 import { sendPasswordResetEmail } from '../utils/email.js';
+
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-passwordHash -resetPasswordToken -resetPasswordExpires');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Get user statistics
+    const itemsListed = await Item.countDocuments({ user: req.user.id });
+    const itemsExchanged = await Item.countDocuments({ user: req.user.id, status: 'exchanged' });
+
+    // Get recent activity (mock data for now - you can implement real activity tracking)
+    const recentActivity = [
+      { description: 'Account created', date: user.createdAt, type: 'account' }
+    ];
+
+    res.json({
+      ...user.toObject(),
+      itemsListed,
+      itemsExchanged,
+      recentActivity
+    });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error', error: e.message });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    const userId = req.user.id;
+
+    // Validate input
+    if (name && name.trim().length < 2) {
+      return res.status(400).json({ message: 'Name must be at least 2 characters long' });
+    }
+
+    if (phone && !/^\+?[\d\s\-\(\)]+$/.test(phone)) {
+      return res.status(400).json({ message: 'Invalid phone number format' });
+    }
+
+    // Update user
+    const updateData = {};
+    if (name) updateData.name = name.trim();
+    if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-passwordHash -resetPasswordToken -resetPasswordExpires');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        ecoPoints: user.ecoPoints
+      }
+    });
+  } catch (e) {
+    if (e.code === 11000) {
+      res.status(409).json({ message: 'Email already in use' });
+    } else {
+      res.status(500).json({ message: 'Server error', error: e.message });
+    }
+  }
+};
 
 export const register = async (req, res) => {
   try {
     const { name, email, password, lat, lng } = req.body;
     if (!name || !email || !password) return res.status(400).json({ message: 'Missing fields' });
+
+    // Enhanced password validation
+    if (password.length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    if (!/(?=.*[a-z])/.test(password)) return res.status(400).json({ message: 'Password must contain at least one lowercase letter' });
+    if (!/(?=.*[A-Z])/.test(password)) return res.status(400).json({ message: 'Password must contain at least one uppercase letter' });
+    if (!/(?=.*\d)/.test(password)) return res.status(400).json({ message: 'Password must contain at least one number' });
+    if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) return res.status(400).json({ message: 'Password must contain at least one special character' });
+
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ message: 'Email already used' });
     const passwordHash = await bcrypt.hash(password, 10);
@@ -60,6 +142,13 @@ export const forgotPassword = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
+
+    // Enhanced password validation
+    if (password.length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    if (!/(?=.*[a-z])/.test(password)) return res.status(400).json({ message: 'Password must contain at least one lowercase letter' });
+    if (!/(?=.*[A-Z])/.test(password)) return res.status(400).json({ message: 'Password must contain at least one uppercase letter' });
+    if (!/(?=.*\d)/.test(password)) return res.status(400).json({ message: 'Password must contain at least one number' });
+    if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) return res.status(400).json({ message: 'Password must contain at least one special character' });
 
     // Hash the token to compare with stored hash
     const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');

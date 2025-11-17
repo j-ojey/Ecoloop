@@ -92,15 +92,38 @@ export default function Discover() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map(i => (
-          <Link to={`/items/${i._id}`} key={i._id} className="card hover:shadow-lg group">
-            <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 mb-4 flex items-center justify-center rounded-lg overflow-hidden group-hover:scale-105 transition-transform">
-              {i.imageUrl ? <img src={i.imageUrl} alt={i.title} className="object-cover h-48 w-full" /> : <span className="text-gray-400">No image</span>}
+          <Link to={`/items/${i._id}`} key={i._id} className={`card hover:shadow-lg group ${i.status !== 'available' ? 'opacity-75' : ''}`}>
+            <div className="relative">
+              <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 mb-4 flex items-center justify-center rounded-lg overflow-hidden group-hover:scale-105 transition-transform">
+                {i.imageUrl ? <img src={i.imageUrl} alt={i.title} className="object-cover h-48 w-full" /> : <span className="text-gray-400">No image</span>}
+              </div>
+              {i.status !== 'available' && (
+                <div className="absolute top-2 right-2">
+                  <span className={`px-2 py-1 text-xs font-bold rounded ${
+                    i.status === 'sold'
+                      ? 'bg-red-500 text-white'
+                      : 'bg-orange-500 text-white'
+                  }`}>
+                    {i.status === 'sold' ? 'SOLD' : 'EXCHANGED'}
+                  </span>
+                </div>
+              )}
             </div>
-            <h2 className="font-bold text-lg mb-1">{i.title}</h2>
+            <h2 className={`font-bold text-lg mb-1 ${i.status !== 'available' ? 'line-through text-gray-500' : ''}`}>{i.title}</h2>
             <p className="text-sm text-gray-600 mb-3">{i.category} • {i.condition}</p>
             <div className="flex justify-between items-center">
-              <span className="inline-block bg-accent/10 text-accent px-2 py-1 rounded text-xs font-semibold">{i.priceType}</span>
-              {i.priceType === 'Sell' && <span className="font-bold">${i.price}</span>}
+              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                i.status !== 'available'
+                  ? 'bg-gray-200 text-gray-500'
+                  : i.priceType === 'Free'
+                    ? 'bg-green-100 text-green-700'
+                    : i.priceType === 'Exchange'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-accent/10 text-accent'
+              }`}>
+                {i.status !== 'available' ? 'UNAVAILABLE' : i.priceType}
+              </span>
+              {i.priceType === 'Sell' && i.status === 'available' && <span className="font-bold">${i.price}</span>}
             </div>
           </Link>
         ))}
