@@ -119,7 +119,7 @@ export default function Messages() {
     <div className="max-w-6xl mx-auto">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 dark:text-white">Messages</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 h-[500px] sm:h-[600px] lg:h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 min-h-[500px] sm:min-h-[600px] lg:h-[calc(100vh-200px)] max-h-[800px]">
         {/* Conversations List */}
         <div className="lg:col-span-1 card order-2 lg:order-1">
           <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">

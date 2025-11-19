@@ -10,6 +10,7 @@ const itemSchema = new mongoose.Schema({
   price: { type: Number, default: 0 },
   status: { type: String, enum: ['available', 'exchanged', 'sold'], default: 'available' },
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   town: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   location: {

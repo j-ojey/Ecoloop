@@ -11,8 +11,8 @@ export const getProfile = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // Get user statistics
-    const itemsListed = await Item.countDocuments({ user: req.user.id });
-    const itemsExchanged = await Item.countDocuments({ user: req.user.id, status: 'exchanged' });
+    const itemsListed = await Item.countDocuments({ ownerId: req.user.id });
+    const itemsExchanged = await Item.countDocuments({ ownerId: req.user.id, status: 'exchanged' });
 
     // Get recent activity (mock data for now - you can implement real activity tracking)
     const recentActivity = [
@@ -32,7 +32,7 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, phone } = req.body;
+    const { name, phone, interests } = req.body;
     const userId = req.user.id;
 
     // Validate input
@@ -48,6 +48,13 @@ export const updateProfile = async (req, res) => {
     const updateData = {};
     if (name) updateData.name = name.trim();
     if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
+    if (interests !== undefined) {
+      // Expect an array of strings
+      if (!Array.isArray(interests)) {
+        return res.status(400).json({ message: 'Interests must be an array' });
+      }
+      updateData.interests = interests.map(i => String(i).trim()).filter(Boolean);
+    }
 
     const user = await User.findByIdAndUpdate(
       userId,

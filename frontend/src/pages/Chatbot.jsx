@@ -56,35 +56,35 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto w-full py-4">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2 dark:text-white flex items-center gap-2">
-          🌿 EcoBot <span className="text-sm font-normal text-gray-500 dark:text-gray-400">AI Sustainability Assistant</span>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-white dark:text-white flex flex-wrap items-center gap-2">
+          🌿 EcoBot <span className="text-sm sm:text-base font-normal text-gray-300 dark:text-gray-400">AI Sustainability Assistant</span>
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">Get expert advice on sustainability and the circular economy</p>
+        <p className="text-gray-300 dark:text-gray-400">Get expert advice on sustainability and the circular economy</p>
       </div>
 
       {/* Quick Prompts */}
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         {quickPrompts.map((prompt, idx) => (
           <button
             key={idx}
             onClick={() => handleQuickPrompt(prompt)}
-            className="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-primary/10 dark:hover:bg-primary/20 text-gray-700 dark:text-gray-300 rounded-full transition"
+            className="text-xs sm:text-sm px-3 py-2 bg-gray-700 border border-gray-600 hover:bg-gray-600 hover:border-gray-500 text-gray-200 rounded-full transition-all shadow-sm"
           >
             💡 {prompt}
           </button>
         ))}
       </div>
 
-      <div className="card h-[600px] flex flex-col bg-white dark:bg-gray-800">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="bg-gray-800 rounded-2xl border-2 border-gray-700 shadow-2xl flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 400px)', minHeight: '400px', maxHeight: '600px' }}>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gray-900/30">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 msg.role === 'user'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
+                  : 'bg-gray-700 dark:bg-gray-700 text-gray-100 dark:text-gray-100'
               }`}>
                 <div className="text-sm whitespace-pre-wrap">
                   {msg.text}
@@ -94,7 +94,7 @@ export default function Chatbot() {
           ))}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3">
+              <div className="bg-gray-700 dark:bg-gray-700 rounded-2xl px-4 py-3">
                 <div className="flex space-x-2">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -106,7 +106,7 @@ export default function Chatbot() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={sendMessage} className="border-t dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
+        <form onSubmit={sendMessage} className="border-t-2 border-gray-700 p-4 bg-gray-800">
           <div className="flex gap-2">
             <input
               type="text"
@@ -118,13 +118,13 @@ export default function Chatbot() {
             />
             <button 
               type="submit" 
-              className="btn-primary px-6" 
+              className="btn-primary px-4 sm:px-6" 
               disabled={loading || !input.trim()}
             >
               {loading ? '...' : 'Send'}
             </button>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <p className="text-xs text-gray-400 mt-2">
             💡 Tip: Ask about waste reduction, item categories, or environmental impact!
           </p>
         </form>

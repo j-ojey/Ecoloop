@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   interests: [{ type: String }],
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date }
 }, { timestamps: true });

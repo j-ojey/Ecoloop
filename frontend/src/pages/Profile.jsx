@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../services/api.js';
 import toast from 'react-hot-toast';
 import { Phone, Mail, MapPin, Calendar, Award, Settings, LogOut, Edit, Shield, HelpCircle, Save, X, Eye, EyeOff } from 'lucide-react';
+import { ProfileStatsSkeleton } from '../components/SkeletonLoaders.jsx';
 
 export default function Profile() {
   const { user, logout, token } = useAuth();
@@ -153,6 +154,9 @@ export default function Profile() {
         {activeTab === 'overview' && (
           <>
             {/* User Stats */}
+            {loading ? (
+              <ProfileStatsSkeleton />
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
                 <div className="flex items-center gap-3">
@@ -190,6 +194,7 @@ export default function Profile() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Recent Activity */}
             <div className="card">
@@ -476,8 +481,7 @@ export default function Profile() {
 
       {/* Privacy Settings Modal */}
       {showPrivacyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">\n          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full my-8 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">

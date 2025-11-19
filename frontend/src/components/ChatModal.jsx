@@ -194,8 +194,8 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl h-[90vh] sm:h-[600px] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl min-h-[400px] max-h-[90vh] my-4 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">

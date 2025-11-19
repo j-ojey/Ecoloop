@@ -12,6 +12,7 @@ import messageRoutes from './routes/messageRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import favoriteRoutes from './routes/favoriteRoutes.js';
 import { signUpload } from './utils/cloudinary.js';
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/favorites', favoriteRoutes);
 app.post('/api/uploads/signature', (req, res) => {
   try {
     const data = signUpload();
@@ -79,10 +81,11 @@ mongoose.connect(mongoUriToUse).then(() => {
     console.log(`server running on port ${config.port}`);
     try {
       const dbName = new URL(mongoUriToUse.includes('mongodb+srv://') ? mongoUriToUse.replace('mongodb+srv://', 'http://') : mongoUriToUse.replace('mongodb://', 'http://')).pathname.replace('/', '') || 'ecoloop';
-      console.log(`Connected to MongoDB database: ${dbName}`);
+      console.log(`Connected to MongoDB`);
     } catch (e) {
       // ignore
     }
   });
 }).catch(err => {
-  console.error('Mongo connection error'
+  console.error('Mongo connection error', err);
+});

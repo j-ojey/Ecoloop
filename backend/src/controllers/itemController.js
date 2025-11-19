@@ -29,7 +29,7 @@ export const createItem = async (req, res) => {
 
 export const getItems = async (req, res) => {
   try {
-    const { category, priceType, town, condition, minPrice, maxPrice, lat, lng, radiusKm, sortBy } = req.query;
+    const { category, priceType, town, condition, minPrice, maxPrice, lat, lng, radiusKm, sortBy, search } = req.query;
     const filter = {};
     if (category) filter.category = category;
     if (priceType) filter.priceType = priceType;
@@ -37,6 +37,17 @@ export const getItems = async (req, res) => {
     if (minPrice || minPrice === '0') filter.price = { ...filter.price, $gte: Number(minPrice) };
     if (maxPrice) filter.price = { ...filter.price, $lte: Number(maxPrice) };
     if (town) filter.town = town;
+    
+    // Search functionality
+    if (search && search.trim()) {
+      filter.$or = [
+        { title: { $regex: search.trim(), $options: 'i' } },
+        { description: { $regex: search.trim(), $options: 'i' } },
+        { category: { $regex: search.trim(), $options: 'i' } },
+        { town: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
+    
     if (lat && lng && radiusKm) {
       filter.location = {
         $nearSphere: {
@@ -247,7 +258,7 @@ export const getRecommendations = async (req, res) => {
 export const updateItemStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, recipientId } = req.body;
 
     // Validate status
     if (!['available', 'sold', 'exchanged'].includes(status)) {
@@ -265,12 +276,25 @@ export const updateItemStatus = async (req, res) => {
     }
 
     item.status = status;
+    
+    // Set recipient if provided
+    if (recipientId && (status === 'sold' || status === 'exchanged')) {
+      item.recipientId = recipientId;
+    }
+    
     await item.save();
 
     // Award eco-points based on CO2 savings for successful exchange/sale
     if (status === 'sold' || status === 'exchanged') {
       const ecoPoints = calculateEcoPoints(item.category, 'complete');
+      
+      // Award points to the giver (item owner)
       await User.findByIdAndUpdate(req.user.id, { $inc: { ecoPoints } });
+      
+      // Award points to the receiver (recipient) as well
+      if (recipientId) {
+        await User.findByIdAndUpdate(recipientId, { $inc: { ecoPoints } });
+      }
     }
 
     res.json(item);

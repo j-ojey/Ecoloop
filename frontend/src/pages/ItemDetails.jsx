@@ -5,6 +5,8 @@ import ChatModal from '../components/ChatModal.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import toast from 'react-hot-toast';
+import { Heart, Share2 } from 'lucide-react';
+import { ItemDetailsSkeleton } from '../components/SkeletonLoaders.jsx';
 
 // Carbon savings estimates in kg CO2 per item category
 const CARBON_SAVINGS = {
@@ -38,10 +40,34 @@ export default function ItemDetails() {
   const { addToCart } = useCart();
   const [item, setItem] = useState(null);
   const [showChat, setShowChat] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [relatedItems, setRelatedItems] = useState([]);
 
   useEffect(() => { (async () => {
-    try { const res = await api.get(`/api/items/${id}`); setItem(res.data); } catch (e) { console.error(e); }
-  })(); }, [id]);
+    try { 
+      const res = await api.get(`/api/items/${id}`); 
+      setItem(res.data);
+      // Check if favorited (only if user is authenticated)
+      if (user) {
+        try {
+          const favRes = await api.get(`/api/favorites/check/${id}`);
+          setIsFavorited(favRes.data.isFavorited);
+        } catch (favError) {
+          console.error('Favorites check error:', favError);
+          // If favorites check fails, just set to false
+          setIsFavorited(false);
+        }
+      }
+      // Fetch related items
+      if (res.data.category) {
+        const relatedRes = await api.get('/api/items', {
+          params: { category: res.data.category }
+        });
+        const filtered = relatedRes.data.filter(i => i._id !== id).slice(0, 3);
+        setRelatedItems(filtered);
+      }
+    } catch (e) { console.error(e); }
+  })(); }, [id, user]);
 
   const handleShowInterest = () => {
     setShowChat(true);
@@ -54,7 +80,60 @@ export default function ItemDetails() {
     }
   };
 
-  if (!item) return <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading...</div>;
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast.error('Please log in to add favorites');
+      return;
+    }
+    
+    try {
+      console.log('Toggling favorite for item:', id, 'isFavorited:', isFavorited);
+      if (isFavorited) {
+        const response = await api.delete(`/api/favorites/${id}`);
+        console.log('Remove favorite response:', response.data);
+        setIsFavorited(false);
+        toast.success('Removed from favorites');
+      } else {
+        const response = await api.post(`/api/favorites/${id}`);
+        console.log('Add favorite response:', response.data);
+        setIsFavorited(true);
+        toast.success('Added to favorites');
+      }
+    } catch (error) {
+      console.error('Toggle favorite error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      toast.error(error.response?.data?.message || 'Failed to update favorites');
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const text = `Check out this item on EcoLoop: ${item.title}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: item.title, text, url });
+        toast.success('Shared successfully!');
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          copyToClipboard(url);
+        }
+      }
+    } else {
+      copyToClipboard(url);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success('Link copied to clipboard!');
+    }).catch(() => {
+      toast.error('Failed to copy link');
+    });
+  };
+
+  if (!item) return <ItemDetailsSkeleton />;
   
   const carbonSaved = CARBON_SAVINGS[item.category] || 5;
   const ecoPointsEarned = calculateEcoPoints(item.category, 'create');
@@ -66,7 +145,31 @@ export default function ItemDetails() {
         <div className="h-80 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 mb-6 flex items-center justify-center rounded-xl overflow-hidden">
           {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="object-cover h-full w-full" /> : <span className="text-gray-400">No image</span>}
         </div>
-        <h1 className="text-3xl font-bold mb-2 dark:text-white">{item.title}</h1>
+        <h1 className="text-3xl font-bold mb-2 dark:text-white flex items-center justify-between">
+          <span>{item.title}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-full transition-all bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              title="Share item"
+            >
+              <Share2 className="w-6 h-6" />
+            </button>
+            {item.ownerId?._id !== user?.id && (
+              <button
+                onClick={toggleFavorite}
+                className={`p-2 rounded-full transition-all ${
+                  isFavorited 
+                    ? 'bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+                title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+              >
+                <Heart className={`w-6 h-6 ${isFavorited ? 'fill-current' : ''}`} />
+              </button>
+            )}
+          </div>
+        </h1>
         <div className="flex gap-3 mb-4 flex-wrap items-center">
           <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-semibold">{item.category}</span>
           <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-sm font-semibold">{item.condition}</span>
@@ -210,6 +313,50 @@ export default function ItemDetails() {
         itemId={item?._id}
         itemTitle={item?.title}
       />
+
+      {/* Related Items */}
+      {relatedItems.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4 dark:text-white">Similar Items</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {relatedItems.map((relItem) => (
+              <a
+                key={relItem._id}
+                href={`/items/${relItem._id}`}
+                className="card hover:shadow-lg transition-all group"
+              >
+                <div className="h-40 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 mb-3 flex items-center justify-center rounded-lg overflow-hidden">
+                  {relItem.imageUrl ? (
+                    <img src={relItem.imageUrl} alt={relItem.title} className="object-cover h-full w-full group-hover:scale-110 transition-transform duration-300" />
+                  ) : (
+                    <span className="text-gray-400 text-sm">No image</span>
+                  )}
+                </div>
+                <h3 className="font-bold text-sm mb-2 dark:text-white group-hover:text-primary transition-colors line-clamp-1">
+                  {relItem.title}
+                </h3>
+                <div className="flex gap-1 flex-wrap mb-2">
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs">
+                    {relItem.category}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${
+                    relItem.priceType === 'Free' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
+                    relItem.priceType === 'Exchange' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' :
+                    'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
+                  }`}>
+                    {relItem.priceType}
+                  </span>
+                </div>
+                {relItem.priceType === 'Sell' && (
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    ${relItem.price || 0}
+                  </p>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

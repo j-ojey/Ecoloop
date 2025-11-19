@@ -60,6 +60,22 @@
   .glass-effect {
     @apply bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg border border-white/20 dark:border-gray-700/20;
   }
+
+  /* Ensure dropdowns and modals are visible */
+  .dropdown-menu {
+    position: absolute;
+    z-index: 60;
+  }
+
+  /* Prevent body scroll when modal is open */
+  .modal-open {
+    overflow: hidden;
+  }
+
+  /* Smooth scrolling for all elements */
+  * {
+    scroll-behavior: smooth;
+  }
 }
 
 @keyframes fadeIn {
