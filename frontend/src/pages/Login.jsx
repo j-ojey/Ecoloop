@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
-import FormInput from '../components/FormInput.jsx';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -36,33 +35,38 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
-        <div className="card">
-          <h1 className="text-3xl font-bold text-center mb-8 dark:text-white">Welcome back</h1>
+        <div className="text-center mb-8 animate-fade-in">
+          <h1 className="text-4xl font-bold gradient-text mb-2">Welcome back</h1>
+          <p className="text-gray-600 dark:text-gray-400">Sign in to continue your eco-journey 🌿</p>
+        </div>
+        <div className="card animate-slide-up">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FormInput
-              label="Email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              validation={{ type: 'email' }}
-            />
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="input-field"
+                required
+              />
+            </div>
             <PasswordInput
               label="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
             />
-            {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>}
-            <button type="submit" className="btn-primary w-full">Sign In</button>
+            {error && <div className="p-4 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-2 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium">{error}</div>}
+            <button type="submit" className="btn-primary w-full text-lg">Sign In →</button>
           </form>
-          <div className="text-center mt-4">
-            <Link to="/forgot-password" className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary">Forgot your password?</Link>
+          <div className="text-center mt-6">
+            <Link to="/forgot-password" className="text-sm text-green-600 dark:text-green-400 hover:underline font-medium">Forgot your password?</Link>
           </div>
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">Don't have an account? <Link to="/register" className="text-primary font-semibold hover:underline">Sign up</Link></p>
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">Don't have an account? <Link to="/register" className="text-green-600 dark:text-green-400 font-semibold hover:underline">Sign up</Link></p>
         </div>
       </div>
     </div>

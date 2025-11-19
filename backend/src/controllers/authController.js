@@ -80,7 +80,7 @@ export const updateProfile = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, lat, lng } = req.body;
+    const { name, email, password, lat, lng, interests } = req.body;
     if (!name || !email || !password) return res.status(400).json({ message: 'Missing fields' });
 
     // Enhanced password validation
@@ -93,9 +93,9 @@ export const register = async (req, res) => {
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ message: 'Email already used' });
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, passwordHash, location: { coordinates: lng && lat ? [lng, lat] : undefined } });
-    const token = signToken({ id: user._id, role: user.role });
-    res.status(201).json({ token, user: { id: user._id, name: user.name, ecoPoints: user.ecoPoints } });
+    const user = await User.create({ name, email, passwordHash, location: { coordinates: lng && lat ? [lng, lat] : undefined }, interests: interests || [] });
+      const token = signToken({ id: user._id, role: user.role });
+      res.status(201).json({ token, user: { id: user._id, name: user.name, ecoPoints: user.ecoPoints, role: user.role, suspended: user.suspended } });
   } catch (e) {
     res.status(500).json({ message: 'Server error', error: e.message });
   }
@@ -105,11 +105,12 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+      if (!user) return res.status(401).json({ message: 'Incorrect email or password' });
+      if (user.suspended) return res.status(403).json({ message: 'Account suspended' });
     const match = await bcrypt.compare(password, user.passwordHash);
-    if (!match) return res.status(401).json({ message: 'Invalid credentials' });
-    const token = signToken({ id: user._id, role: user.role });
-    res.json({ token, user: { id: user._id, name: user.name, ecoPoints: user.ecoPoints } });
+    if (!match) return res.status(401).json({ message: 'Incorrect email or password' });
+      const token = signToken({ id: user._id, role: user.role });
+      res.json({ token, user: { id: user._id, name: user.name, ecoPoints: user.ecoPoints, role: user.role, suspended: user.suspended } });
   } catch (e) {
     res.status(500).json({ message: 'Server error', error: e.message });
   }

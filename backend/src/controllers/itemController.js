@@ -4,7 +4,8 @@ import { calculateEcoPoints } from '../utils/ecoPoints.js';
 
 export const createItem = async (req, res) => {
   try {
-    const { title, description, category, condition, priceType, price, lat, lng, imageUrl } = req.body;
+    const { title, description, category, condition, priceType, price, town, lat, lng, imageUrl } = req.body;
+    if (!town || town.trim() === '') return res.status(400).json({ message: 'Town is required' });
     const item = await Item.create({
       title,
       description,
@@ -13,6 +14,7 @@ export const createItem = async (req, res) => {
       priceType,
       price: price || 0,
       ownerId: req.user.id,
+      town,
       imageUrl,
       location: { coordinates: lng && lat ? [lng, lat] : undefined }
     });
@@ -27,10 +29,14 @@ export const createItem = async (req, res) => {
 
 export const getItems = async (req, res) => {
   try {
-    const { category, priceType, lat, lng, radiusKm } = req.query;
+    const { category, priceType, town, condition, minPrice, maxPrice, lat, lng, radiusKm, sortBy } = req.query;
     const filter = {};
     if (category) filter.category = category;
     if (priceType) filter.priceType = priceType;
+    if (condition) filter.condition = condition;
+    if (minPrice || minPrice === '0') filter.price = { ...filter.price, $gte: Number(minPrice) };
+    if (maxPrice) filter.price = { ...filter.price, $lte: Number(maxPrice) };
+    if (town) filter.town = town;
     if (lat && lng && radiusKm) {
       filter.location = {
         $nearSphere: {
@@ -39,8 +45,67 @@ export const getItems = async (req, res) => {
         }
       };
     }
-    const items = await Item.find(filter).sort({ createdAt: -1 }).limit(100).populate('ownerId', 'name');
+    // Sort options
+    const sortObj = {};
+    if (sortBy === 'oldest') sortObj.createdAt = 1;
+    else if (sortBy === 'priceAsc') sortObj.price = 1;
+    else if (sortBy === 'priceDesc') sortObj.price = -1;
+    else sortObj.createdAt = -1; // newest default
+
+    const items = await Item.find(filter).sort(sortObj).limit(100).populate('ownerId', 'name');
     res.json(items);
+  } catch (e) {
+    res.status(500).json({ message: 'Server error', error: e.message });
+  }
+};
+
+export const getTowns = async (req, res) => {
+  try {
+    // Major towns in Kenya
+    const majorTowns = [
+      'Nairobi',
+      'Mombasa',
+      'Kisumu',
+      'Nakuru',
+      'Eldoret',
+      'Thika',
+      'Malindi',
+      'Kitale',
+      'Garissa',
+      'Kakamega',
+      'Voi',
+      'Naivasha',
+      'Kericho',
+      'Meru',
+      'Nyeri',
+      'Embu',
+      'Machakos',
+      'Kajiado',
+      'Lamu',
+      'Wajir',
+      'Mandera',
+      'Marsabit',
+      'Isiolo',
+      'Samburu',
+      'Turkana',
+      'West Pokot',
+      'Trans Nzoia',
+      'Uasin Gishu',
+      'Nandi',
+      'Baringo',
+      'Laikipia',
+      'Narok',
+      'Kiambu',
+      'Murang\'a',
+      'Kirinyaga',
+      'Nyandarua',
+      'Taita Taveta',
+      'Kwale',
+      'Kilifi',
+      'Tana River',
+      'Other'
+    ];
+    res.json(majorTowns);
   } catch (e) {
     res.status(500).json({ message: 'Server error', error: e.message });
   }
@@ -59,7 +124,7 @@ export const getItemById = async (req, res) => {
 export const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, category, condition, priceType, price, imageUrl } = req.body;
+    const { title, description, category, condition, priceType, price, town, imageUrl } = req.body;
 
     const item = await Item.findById(id);
     if (!item) {
@@ -71,7 +136,7 @@ export const updateItem = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to edit this item' });
     }
 
-    Object.assign(item, { title, description, category, condition, priceType, price, imageUrl });
+    Object.assign(item, { title, description, category, condition, priceType, price, town, imageUrl });
     await item.save();
 
     res.json(item);
@@ -104,7 +169,38 @@ export const getRecommendations = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Get user's posted items to understand preferences
+    // Get user's interests
+    const user = await User.findById(userId);
+    const userInterests = user.interests || [];
+    
+    // If user has interests, recommend based on them
+    if (userInterests.length > 0) {
+      const recommendations = await Item.find({
+        category: { $in: userInterests },
+        ownerId: { $ne: userId },
+        status: 'available'
+      })
+        .limit(6)
+        .populate('ownerId', 'name')
+        .sort({ createdAt: -1 });
+      
+      // If not enough recommendations, fill with recent items
+      if (recommendations.length < 6) {
+        const additionalItems = await Item.find({
+          ownerId: { $ne: userId },
+          status: 'available',
+          _id: { $nin: recommendations.map(r => r._id) }
+        })
+          .limit(6 - recommendations.length)
+          .populate('ownerId', 'name')
+          .sort({ createdAt: -1 });
+        recommendations.push(...additionalItems);
+      }
+      
+      return res.json(recommendations);
+    }
+    
+    // Fallback: Get user's posted items to understand preferences
     const userItems = await Item.find({ ownerId: userId });
     
     // Get categories user is interested in
@@ -112,7 +208,7 @@ export const getRecommendations = async (req, res) => {
     
     // If user has no items, recommend recent popular items
     if (userCategories.length === 0) {
-      const recommendations = await Item.find({ ownerId: { $ne: userId } })
+      const recommendations = await Item.find({ ownerId: { $ne: userId }, status: 'available' })
         .limit(6)
         .populate('ownerId', 'name')
         .sort({ createdAt: -1 });
@@ -122,7 +218,8 @@ export const getRecommendations = async (req, res) => {
     // Find similar items from other users based on category preferences
     const recommendations = await Item.find({
       category: { $in: userCategories },
-      ownerId: { $ne: userId }
+      ownerId: { $ne: userId },
+      status: 'available'
     })
       .limit(6)
       .populate('ownerId', 'name')
@@ -132,6 +229,7 @@ export const getRecommendations = async (req, res) => {
     if (recommendations.length < 6) {
       const additionalItems = await Item.find({
         ownerId: { $ne: userId },
+        status: 'available',
         _id: { $nin: recommendations.map(r => r._id) }
       })
         .limit(6 - recommendations.length)

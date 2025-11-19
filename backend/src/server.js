@@ -45,15 +45,44 @@ io.on('connection', (socket) => {
   socket.on('private_message', ({ to, message }) => {
     io.to(to).emit('private_message', message);
   });
+  socket.on('typing', ({ recipientId, userId }) => {
+    socket.to(recipientId).emit('typing', { userId, recipientId });
+  });
+  socket.on('stop_typing', ({ recipientId, userId }) => {
+    socket.to(recipientId).emit('stop_typing', { userId, recipientId });
+  });
 });
 
 app.set('io', io);
 
-mongoose.connect(config.mongoUri).then(() => {
+// If the URI points to a cluster or uses SRV without a default DB path, append '/ecoloop' so we don't connect to the 'test' DB by accident.
+let mongoUriToUse = config.mongoUri;
+try {
+  const uri = new URL(config.mongoUri.includes('mongodb+srv://') ? config.mongoUri.replace('mongodb+srv://', 'http://') : config.mongoUri.replace('mongodb://', 'http://'));
+  const path = uri.pathname && uri.pathname !== '/' ? uri.pathname : '';
+  if (!path) {
+    console.warn('⚠️ MONGO_URI does not specify a DB name — defaulting to use /ecoloop to avoid writing to the `test` DB.');
+    // Append 'ecoloop' DB name — use the original scheme prefix (+srv) if provided.
+    const prefix = config.mongoUri.startsWith('mongodb+srv://') ? 'mongodb+srv://' : 'mongodb://';
+    const suffix = config.mongoUri.split(prefix)[1];
+    // If there are any query params, put them after '/ecoloop'
+    const parts = suffix.split('?');
+    mongoUriToUse = `${prefix}${parts[0]}/ecoloop${parts[1] ? `?${parts[1]}` : ''}`;
+  }
+} catch (e) {
+  // If parsing fails, don't modify the URI — just use what's provided.
+  mongoUriToUse = config.mongoUri;
+}
+
+mongoose.connect(mongoUriToUse).then(() => {
   httpServer.listen(config.port, () => {
     console.log(`server running on port ${config.port}`);
-    console.log(`MongoDB connected successfully.`)
+    try {
+      const dbName = new URL(mongoUriToUse.includes('mongodb+srv://') ? mongoUriToUse.replace('mongodb+srv://', 'http://') : mongoUriToUse.replace('mongodb://', 'http://')).pathname.replace('/', '') || 'ecoloop';
+      console.log(`Connected to MongoDB database: ${dbName}`);
+    } catch (e) {
+      // ignore
+    }
   });
 }).catch(err => {
-  console.error('Mongo connection error', err);
-});
+  console.error('Mongo connection error'

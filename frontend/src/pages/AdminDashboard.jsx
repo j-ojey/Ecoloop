@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '../services/api.js';
+import toast from 'react-hot-toast';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,20 +18,59 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tool
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data } = await axios.get('/api/admin/stats');
+        const { data } = await api.get('/api/admin/stats');
         setStats(data);
       } catch (error) {
         console.error('Failed to fetch stats:', error);
+        toast.error('Failed to load stats');
       } finally {
         setLoading(false);
       }
     };
     fetchStats();
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const { data } = await api.get('/api/admin/users');
+      setUsers(data);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      toast.error('Failed to load user list');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const toggleSuspend = async (userId, suspend) => {
+    try {
+      const { data } = await api.patch(`/api/admin/users/${userId}/suspend`, { suspended: suspend });
+      setUsers(prev => prev.map(u => (u._id === userId ? data : u)));
+      toast.success(`User ${suspend ? 'suspended' : 'unsuspended'} successfully`);
+    } catch (error) {
+      console.error('Failed to update suspension:', error);
+      toast.error('Failed to update user');
+    }
+  };
+
+  const changeRole = async (userId, role) => {
+    try {
+      const { data } = await api.patch(`/api/admin/users/${userId}/role`, { role });
+      setUsers(prev => prev.map(u => (u._id === userId ? data : u)));
+      toast.success('Role updated');
+    } catch (error) {
+      console.error('Failed to update role:', error);
+      toast.error('Failed to update role');
+    }
+  };
 
   if (loading) return <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading analytics...</div>;
   if (!stats) return <div className="text-center py-12 text-red-500">Failed to load statistics</div>;
@@ -151,6 +191,50 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
+
+      {/* User Management */}
+      <div className="card mt-6">
+        <h2 className="font-bold text-xl mb-4 dark:text-white">👥 User Management</h2>
+        {usersLoading ? (
+          <div className="p-6 text-center text-gray-500">Loading users...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="text-xs text-gray-500 uppercase tracking-wide">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Eco Points</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u._id} className="border-t border-gray-100 dark:border-gray-700">
+                    <td className="px-4 py-3">{u.name}</td>
+                    <td className="px-4 py-3">{u.email}</td>
+                    <td className="px-4 py-3">{u.role}</td>
+                    <td className="px-4 py-3">{u.ecoPoints}</td>
+                    <td className="px-4 py-3">{u.suspended ? 'Suspended' : 'Active'}</td>
+                    <td className="px-4 py-3 flex gap-2 items-center">
+                      <button onClick={() => toggleSuspend(u._id, !u.suspended)} className={`px-2 py-1 rounded text-sm ${u.suspended ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {u.suspended ? 'Unsuspend' : 'Suspend'}
+                      </button>
+                      <select className="input-field" value={u.role} onChange={e => changeRole(u._id, e.target.value)}>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+

@@ -4,15 +4,20 @@ import { api } from '../services/api.js';
 export default function Leaderboard() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => { fetchUsers(); }, []);
 
   async function fetchUsers() {
     setLoading(true);
+    setError('');
     try {
-      const res = await api.get('/api/leaderboard');
+      const res = await api.get('/api/leaderboard', { timeout: 10000 });
       setUsers(res.data);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      setError('Failed to load leaderboard. Please try again.');
+    }
     finally { setLoading(false); }
   }
 
@@ -22,6 +27,12 @@ export default function Leaderboard() {
       <p className="text-gray-600 dark:text-gray-400 mb-6">Top contributors building a sustainable community.</p>
       <div className="card">
         {loading && <p className="text-center py-8 text-gray-500 dark:text-gray-400">Loading...</p>}
+        {!loading && error && (
+          <div className="text-center py-8">
+            <p className="text-red-600 dark:text-red-400 mb-3">{error}</p>
+            <button onClick={fetchUsers} className="btn-primary">Retry</button>
+          </div>
+        )}
         <ol className="space-y-3">
           {users.map((u, idx) => (
             <li key={u._id} className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0">

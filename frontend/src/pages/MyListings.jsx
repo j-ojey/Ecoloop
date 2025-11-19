@@ -18,13 +18,16 @@ export default function MyListings() {
     e.stopPropagation();
     
     try {
-      await api.patch(`/api/items/${itemId}/status`, { status: newStatus });
+      await api.patch(`/api/items/${itemId}/status`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success(`Item marked as ${newStatus}`);
       setItems(items.map(item => 
         item._id === itemId ? { ...item, status: newStatus } : item
       ));
     } catch (error) {
-      toast.error('Failed to update item status');
+      console.error('Status update error:', error);
+      toast.error(error.response?.data?.message || 'Failed to update item status');
     }
   };
 
@@ -70,21 +73,28 @@ export default function MyListings() {
                 </div>
               )}
               <Link to={`/items/${i._id}`}>
-                <div className="h-40 bg-gradient-to-br from-gray-200 to-gray-300 mb-4 flex items-center justify-center rounded-lg overflow-hidden group-hover:scale-105 transition-transform">
+                <div className="h-40 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 mb-4 flex items-center justify-center rounded-lg overflow-hidden group-hover:scale-105 transition-transform">
                   {i.imageUrl ? <img src={i.imageUrl} alt={i.title} className="object-cover h-40 w-full" /> : <span className="text-gray-400">No image</span>}
                 </div>
-                <h2 className={`font-bold text-lg mb-1 dark:text-white ${i.status !== 'available' ? 'line-through text-gray-500' : ''}`}>{i.title}</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{i.category} • {i.condition}</p>
-                <div className="mb-3">
+                <h2 className={`font-bold text-lg mb-1 dark:text-white ${i.status !== 'available' ? 'line-through text-gray-500 dark:text-gray-600' : ''}`}>{i.title}</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{i.category} • {i.condition}</p>
+                <div className="mb-3 flex items-center justify-between gap-2">
                   <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                     i.status === 'sold'
                       ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
                       : i.status === 'exchanged'
                         ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
-                        : 'bg-accent/10 dark:bg-accent/20 text-accent'
+                        : i.priceType === 'Free'
+                          ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                          : i.priceType === 'Exchange'
+                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                            : 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
                   }`}>
                     {i.status === 'available' ? i.priceType : i.status.toUpperCase()}
                   </span>
+                  {i.priceType === 'Sell' && i.status === 'available' && (
+                    <span className="text-lg font-bold text-green-600 dark:text-green-400">${i.price || 0}</span>
+                  )}
                 </div>
               </Link>
               <div className="flex gap-2 mt-4">

@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import LocationPicker from '../components/LocationPicker.jsx';
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
@@ -31,7 +30,6 @@ export default function EditItem() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [location, setLocation] = useState(null);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -39,9 +37,12 @@ export default function EditItem() {
     condition: 'Used',
     priceType: 'Free',
     price: 0,
+    town: '',
     imageUrl: ''
   });
   const [file, setFile] = useState(null);
+  const [towns, setTowns] = useState([]);
+  const [customTown, setCustomTown] = useState('');
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -54,13 +55,9 @@ export default function EditItem() {
           condition: data.condition,
           priceType: data.priceType,
           price: data.price || 0,
+          town: data.town || '',
           imageUrl: data.imageUrl || ''
         });
-        // Set location if exists
-        if (data.location?.coordinates) {
-          const [lng, lat] = data.location.coordinates;
-          setLocation({ latitude: lat, longitude: lng });
-        }
         setLoading(false);
       } catch (error) {
         toast.error('Failed to load item');
@@ -68,7 +65,24 @@ export default function EditItem() {
       }
     };
     fetchItem();
+    fetchTowns();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (towns.length > 0 && form.town && form.town !== 'Other' && !towns.includes(form.town)) {
+      setCustomTown(form.town);
+      setForm(prev => ({ ...prev, town: 'Other' }));
+    }
+  }, [towns]);
+
+  async function fetchTowns() {
+    try {
+      const res = await api.get('/api/items/towns');
+      setTowns(res.data || []);
+    } catch (e) {
+      // ignore
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -80,13 +94,7 @@ export default function EditItem() {
         imageUrl = up.secure_url;
       }
       const body = { ...form, price: Number(form.price || 0), imageUrl };
-      // Add location if provided
-      if (location) {
-        body.location = {
-          type: 'Point',
-          coordinates: [location.longitude, location.latitude]
-        };
-      }
+      if (form.town === 'Other' && customTown.trim()) body.town = customTown.trim();
       await api.put(`/api/items/${id}`, body, { headers: { Authorization: `Bearer ${token}` } });
       toast.success('Item updated successfully!');
       navigate('/my');
@@ -116,11 +124,17 @@ export default function EditItem() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-200">Location (Optional)</label>
-            <LocationPicker 
-              onLocationSelect={setLocation} 
-              initialPosition={location ? { lat: location.latitude, lng: location.longitude } : null}
-            />
+            <label className="block text-sm font-medium mb-2 dark:text-gray-200">Town</label>
+            <div className="flex gap-2 items-center">
+              <select value={form.town} onChange={e=>setForm({...form, town: e.target.value})} className="input-field max-w-xs">
+                <option value="">Select town</option>
+                {towns.map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="Other">Other</option>
+              </select>
+              {form.town === 'Other' && (
+                <input value={customTown} onChange={e=>setCustomTown(e.target.value)} placeholder="Enter town name" className="input-field" />
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2 dark:text-gray-200">Description</label>

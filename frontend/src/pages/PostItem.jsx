@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import LocationPicker from '../components/LocationPicker.jsx';
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
@@ -52,11 +51,23 @@ async function uploadToCloudinary(file) {
 }
 
 export default function PostItem() {
-  const [form, setForm] = useState({ title: '', description: '', category: 'Other', condition: 'Used', priceType: 'Free', price: 0 });
-  const [location, setLocation] = useState(null);
+  const [form, setForm] = useState({ title: '', description: '', category: 'Other', condition: 'Used', priceType: 'Free', price: 0, town: '' });
+  const [towns, setTowns] = useState([]);
+  const [customTown, setCustomTown] = useState('');
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const { token } = useAuth();
+
+  useEffect(() => { fetchTowns(); }, []);
+
+  async function fetchTowns() {
+    try {
+      const res = await api.get('/api/items/towns');
+      setTowns(res.data || []);
+    } catch (e) {
+      // ignore
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -68,12 +79,8 @@ export default function PostItem() {
         imageUrl = up.secure_url;
       }
       const body = { ...form, price: Number(form.price || 0), imageUrl };
-      // Add location if provided
-      if (location) {
-        body.location = {
-          type: 'Point',
-          coordinates: [location.longitude, location.latitude]
-        };
+      if (form.town === 'Other' && customTown.trim()) {
+        body.town = customTown.trim();
       }
       await api.post('/api/items', body, { headers: { Authorization: `Bearer ${token}` } });
       const ecoPointsEarned = calculateEcoPoints(form.category, 'create');
@@ -87,38 +94,44 @@ export default function PostItem() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8 dark:text-white">List a New Item</h1>
-      <div className="card">
+    <div className="max-w-2xl mx-auto animate-fade-in">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold gradient-text mb-2">📝 List a New Item</h1>
+        <p className="text-gray-600 dark:text-gray-400">Share your items and earn eco-points 🌿</p>
+      </div>
+      <div className="card bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
         <form onSubmit={handleSubmit} className="grid gap-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Title</label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">✏️ Title</label>
             <input type="text" className="input-field" placeholder="e.g., Vintage Leather Chair" value={form.title} onChange={e=>setForm({...form, title: e.target.value})} required />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Description</label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">📝 Description</label>
             <textarea className="input-field h-24 resize-none" placeholder="Tell us about the item..." value={form.description} onChange={e=>setForm({...form, description: e.target.value})} required />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Category</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">📋 Category</label>
               <select className="input-field" value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
                 <option>Clothes</option>
                 <option>Electronics</option>
                 <option>Furniture</option>
+                <option>Books</option>
+                <option>Toys</option>
+                <option>Sports</option>
+                <option>Home & Garden</option>
                 <option>Other</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Condition</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">⭐ Condition</label>
               <select className="input-field" value={form.condition} onChange={e=>setForm({...form, condition: e.target.value})}>
                 <option>New</option>
-                <option>Good</option>
                 <option>Used</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Type</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">🏷️ Type</label>
               <select className="input-field" value={form.priceType} onChange={e=>setForm({...form, priceType: e.target.value})}>
                 <option>Free</option>
                 <option>Exchange</option>
@@ -128,44 +141,55 @@ export default function PostItem() {
           </div>
           
           {/* Eco Points Preview */}
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <h3 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/30 dark:via-emerald-900/20 dark:to-teal-900/10 border-2 border-green-300 dark:border-green-700 rounded-2xl p-6 shadow-lg shadow-green-100 dark:shadow-green-900/20">
+            <h3 className="font-bold text-lg text-green-800 dark:text-green-200 mb-4 flex items-center gap-2">
               🌱 Environmental Impact Preview
             </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-green-700 dark:text-green-300">CO₂ Saved</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="grid grid-cols-2 gap-6 text-sm">
+              <div className="text-center">
+                <p className="text-green-700 dark:text-green-300 font-medium mb-2">CO₂ Saved</p>
+                <p className="text-3xl font-extrabold gradient-text">
                   ~{CARBON_SAVINGS[form.category] || 5}kg
                 </p>
               </div>
-              <div>
-                <p className="text-green-700 dark:text-green-300">Eco Points Earned</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-center">
+                <p className="text-green-700 dark:text-green-300 font-medium mb-2">Eco Points Earned</p>
+                <p className="text-3xl font-extrabold gradient-text">
                   +{calculateEcoPoints(form.category, 'create')}
                 </p>
               </div>
             </div>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-              Complete exchange/sale to earn +{calculateEcoPoints(form.category, 'complete')} more points!
-            </p>
+            <div className="mt-4 pt-4 border-t-2 border-green-200 dark:border-green-700">
+              <p className="text-xs text-green-700 dark:text-green-400 font-medium text-center">
+                ✨ Complete exchange/sale to earn +{calculateEcoPoints(form.category, 'complete')} more points!
+              </p>
+            </div>
           </div>
           {form.priceType === 'Sell' && (
             <div>
-              <label className="block text-sm font-medium mb-2">Price ($)</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">💵 Price ($)</label>
               <input type="number" className="input-field" placeholder="0" value={form.price} onChange={e=>setForm({...form, price: e.target.value})} />
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium mb-2">Select Location (Optional)</label>
-            <LocationPicker onLocationSelect={setLocation} />
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">📍 Town</label>
+            <div className="flex gap-2 items-center">
+              <select value={form.town} onChange={e=>setForm({...form, town: e.target.value})} className="input-field max-w-xs">
+                <option value="">Select town</option>
+                {towns.map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="Other">Other</option>
+              </select>
+              {form.town === 'Other' && (
+                <input value={customTown} onChange={e=>setCustomTown(e.target.value)} placeholder="Enter town name" className="input-field" />
+              )}
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Upload Photo</label>
-            <input type="file" accept="image/*" onChange={e=>setFile(e.target.files?.[0])} className="w-full" />
-            {file && <p className="text-sm text-green-600 mt-1">✓ {file.name}</p>}
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">📸 Upload Photo</label>
+            <input type="file" accept="image/*" onChange={e=>setFile(e.target.files?.[0])} className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-green-500 dark:hover:border-green-500 transition-colors cursor-pointer" />
+            {file && <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">✓ {file.name}</p>}
           </div>
-          <button type="submit" disabled={saving} className="btn-primary w-full">{saving ? 'Publishing...' : 'Publish Item'}</button>
+          <button type="submit" disabled={saving} className="btn-primary w-full text-lg mt-4">{saving ? '📤 Publishing...' : '🚀 Publish Item'}</button>
         </form>
       </div>
     </div>
