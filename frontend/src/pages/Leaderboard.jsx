@@ -15,7 +15,7 @@ export default function Leaderboard() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/api/leaderboard', { timeout: 10000 });
+      const res = await api.get('/leaderboard', { timeout: 10000 });
       setUsers(res.data.topUsers || res.data);
       setCurrentUserPosition(res.data.currentUserPosition || null);
     } catch (e) {

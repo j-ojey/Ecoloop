@@ -51,7 +51,7 @@ function Layout({ children }) {
     const fetchUnread = async () => {
       if (!token) { setUnreadCount(0); return; }
       try {
-        const res = await api.get('/api/messages');
+        const res = await api.get('/messages');
         setUnreadCount(res.data?.count || 0);
       } catch (e) {
         // ignore
@@ -67,7 +67,7 @@ function Layout({ children }) {
   const fetchRecentUnread = async () => {
     if (!user?.id) return;
     try {
-      const res = await api.get(`/api/messages/${user.id}`);
+      const res = await api.get(`/messages/${user.id}`);
       // Only unread where current user is receiver
       const unread = res.data.filter(m => {
         const receiverId = m.receiverId._id || m.receiverId;
@@ -111,7 +111,7 @@ function Layout({ children }) {
 
   const markAllRead = async () => {
     try {
-      await api.post('/api/messages/read');
+      await api.post('/messages/read');
       setUnreadCount(0);
       setRecentUnread([]);
       setShowDropdown(false);

@@ -24,7 +24,7 @@ export default function Profile() {
 
   const fetchUserStats = async () => {
     try {
-      const response = await api.get('/api/auth/profile');
+      const response = await api.get('/auth/profile');
       setUserStats(response.data);
       setEditForm({
         name: response.data.name || '',
@@ -64,7 +64,7 @@ export default function Profile() {
 
     setSaving(true);
     try {
-      const response = await api.put('/api/auth/profile', {
+      const response = await api.put('/auth/profile', {
         name: editForm.name.trim(),
         phone: editForm.phone.trim() || null
       });

@@ -34,7 +34,7 @@ const calculateEcoPoints = (category, action = 'create') => {
 };
 
 async function getUploadSignature() {
-  const res = await fetch(`${API_BASE}/api/uploads/signature`, { method: 'POST' });
+  const res = await fetch(`${API_BASE}/uploads/signature`, { method: 'POST' });
   return res.json();
 }
 
@@ -62,7 +62,7 @@ export default function PostItem() {
 
   async function fetchTowns() {
     try {
-      const res = await api.get('/api/items/towns');
+      const res = await api.get('/items/towns');
       setTowns(res.data || []);
     } catch (e) {
       // ignore
@@ -82,7 +82,7 @@ export default function PostItem() {
       if (form.town === 'Other' && customTown.trim()) {
         body.town = customTown.trim();
       }
-      await api.post('/api/items', body, { headers: { Authorization: `Bearer ${token}` } });
+      await api.post('/items', body, { headers: { Authorization: `Bearer ${token}` } });
       const ecoPointsEarned = calculateEcoPoints(form.category, 'create');
       toast.success(`Item posted successfully! +${ecoPointsEarned} eco-points earned for saving ~${CARBON_SAVINGS[form.category] || 5}kg CO₂! 🌱`);
       window.location.href = '/discover';

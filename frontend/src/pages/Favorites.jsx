@@ -14,7 +14,7 @@ export default function Favorites() {
 
   const fetchFavorites = async () => {
     try {
-      const response = await api.get('/api/favorites');
+      const response = await api.get('/favorites');
       setFavorites(response.data);
     } catch (error) {
       toast.error('Failed to load favorites');
@@ -25,7 +25,7 @@ export default function Favorites() {
 
   const removeFavorite = async (itemId) => {
     try {
-      await api.delete(`/api/favorites/${itemId}`);
+      await api.delete(`/favorites/${itemId}`);
       setFavorites(favorites.filter(item => item._id !== itemId));
       toast.success('Removed from favorites');
     } catch (error) {

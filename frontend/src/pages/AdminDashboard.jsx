@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data } = await api.get('/api/admin/stats');
+        const { data } = await api.get('/admin/stats');
         setStats(data);
       } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     setUsersLoading(true);
     try {
-      const { data } = await api.get('/api/admin/users');
+      const { data } = await api.get('/admin/users');
       setUsers(data);
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
 
   const toggleSuspend = async (userId, suspend) => {
     try {
-      const { data } = await api.patch(`/api/admin/users/${userId}/suspend`, { suspended: suspend });
+      const { data } = await api.patch(`/admin/users/${userId}/suspend`, { suspended: suspend });
       setUsers(prev => prev.map(u => (u._id === userId ? data : u)));
       toast.success(`User ${suspend ? 'suspended' : 'unsuspended'} successfully`);
     } catch (error) {
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
 
   const changeRole = async (userId, role) => {
     try {
-      const { data } = await api.patch(`/api/admin/users/${userId}/role`, { role });
+      const { data } = await api.patch(`/admin/users/${userId}/role`, { role });
       setUsers(prev => prev.map(u => (u._id === userId ? data : u)));
       toast.success('Role updated');
     } catch (error) {

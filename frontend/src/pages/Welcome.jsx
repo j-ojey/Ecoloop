@@ -17,7 +17,7 @@ export default function Welcome() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get('/api/auth/profile');
+        const res = await api.get('/auth/profile');
         setInterests(res.data.interests || []);
       } catch (e) {
         // ignore - user might not have interests set yet
@@ -36,7 +36,7 @@ export default function Welcome() {
     setSaving(true);
     setError(null);
     try {
-      await api.put('/api/auth/profile', { interests });
+      await api.put('/auth/profile', { interests });
       navigate('/discover');
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to save');

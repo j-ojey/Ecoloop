@@ -67,7 +67,7 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
       await loadMessages();
       // Mark conversation as read on open
       try {
-        await api.post(`/api/messages/read/${recipientId}`);
+        await api.post(`/messages/read/${recipientId}`);
       } catch (err) {
         console.error('Failed to mark conversation read', err);
       }
@@ -80,7 +80,7 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
 
   const loadMessages = async () => {
     try {
-      const response = await api.get(`/api/messages/${user.id}`);
+      const response = await api.get(`/messages/${user.id}`);
       // Filter messages for this conversation
       const conversationMessages = response.data.filter(msg => {
         const senderId = msg.senderId._id || msg.senderId;
@@ -104,7 +104,7 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
         itemId: itemId
       };
 
-      const response = await api.post('/api/messages', messageData);
+      const response = await api.post('/messages', messageData);
 
       // Add message to local state immediately
       setMessages(prev => [...prev, response.data]);

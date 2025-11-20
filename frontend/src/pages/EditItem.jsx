@@ -8,7 +8,7 @@ const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 async function getUploadSignature() {
-  const res = await fetch(`${API_BASE}/api/uploads/signature`, { method: 'POST' });
+  const res = await fetch(`${API_BASE}/uploads/signature`, { method: 'POST' });
   return res.json();
 }
 
@@ -47,7 +47,7 @@ export default function EditItem() {
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const { data } = await api.get(`/api/items/${id}`);
+        const { data } = await api.get(`/items/${id}`);
         setForm({
           title: data.title,
           description: data.description,
@@ -77,7 +77,7 @@ export default function EditItem() {
 
   async function fetchTowns() {
     try {
-      const res = await api.get('/api/items/towns');
+      const res = await api.get('/items/towns');
       setTowns(res.data || []);
     } catch (e) {
       // ignore
@@ -95,7 +95,7 @@ export default function EditItem() {
       }
       const body = { ...form, price: Number(form.price || 0), imageUrl };
       if (form.town === 'Other' && customTown.trim()) body.town = customTown.trim();
-      await api.put(`/api/items/${id}`, body, { headers: { Authorization: `Bearer ${token}` } });
+      await api.put(`/items/${id}`, body, { headers: { Authorization: `Bearer ${token}` } });
       toast.success('Item updated successfully!');
       navigate('/my');
     } catch (error) {

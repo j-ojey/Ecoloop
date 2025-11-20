@@ -15,7 +15,7 @@ export default function MyListings() {
 
   useEffect(() => { (async () => {
     try {
-      const res = await api.get('/api/items');
+      const res = await api.get('/items');
       // ownerId may be populated ({ _id }) or just an id string — handle both
       const list = res.data.filter(i => {
         const owner = i.ownerId?._id || i.ownerId;
@@ -39,7 +39,7 @@ export default function MyListings() {
     
     // For marking back to available, no recipient needed
     try {
-      await api.patch(`/api/items/${itemId}/status`, { status: newStatus }, {
+      await api.patch(`/items/${itemId}/status`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(`Item marked as ${newStatus}`);
@@ -60,7 +60,7 @@ export default function MyListings() {
 
     try {
       // Find the recipient user by email
-      const recipientRes = await api.get(`/api/auth/find-by-email/${encodeURIComponent(recipientEmail)}`, {
+      const recipientRes = await api.get(`/auth/find-by-email/${encodeURIComponent(recipientEmail)}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -72,7 +72,7 @@ export default function MyListings() {
       }
 
       // Update item status with recipient
-      await api.patch(`/api/items/${selectedItem}/status`, { 
+      await api.patch(`/items/${selectedItem}/status`, { 
         status: selectedStatus,
         recipientId: recipient._id 
       }, {
@@ -108,7 +108,7 @@ export default function MyListings() {
     }
     
     try {
-      await api.delete(`/api/items/${itemId}`);
+      await api.delete(`/items/${itemId}`);
       toast.success('Item deleted successfully');
       setItems(items.filter(item => item._id !== itemId));
     } catch (error) {

@@ -57,7 +57,7 @@ export default function Discover() {
   async function fetchItems() {
     setLoading(true);
     try {
-      const res = await api.get('/api/items', { params: { 
+      const res = await api.get('/items', { params: { 
         search: searchQuery || undefined,
         category: category || undefined, 
         priceType: priceType || undefined,
@@ -80,7 +80,7 @@ export default function Discover() {
 
   async function fetchTowns() {
     try {
-      const res = await api.get('/api/items/towns');
+      const res = await api.get('/items/towns');
       setTowns(res.data || []);
     } catch (e) {
       console.error('Failed to fetch towns', e);
@@ -89,7 +89,7 @@ export default function Discover() {
 
   async function fetchRecommendations() {
     try {
-      const res = await api.get('/api/items/recommendations');
+      const res = await api.get('/items/recommendations');
       setRecommendations(res.data);
     } catch (e) {
       console.error('Failed to fetch recommendations:', e);

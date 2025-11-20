@@ -45,12 +45,12 @@ export default function ItemDetails() {
 
   useEffect(() => { (async () => {
     try { 
-      const res = await api.get(`/api/items/${id}`); 
+      const res = await api.get(`/items/${id}`); 
       setItem(res.data);
       // Check if favorited (only if user is authenticated)
       if (user) {
         try {
-          const favRes = await api.get(`/api/favorites/check/${id}`);
+          const favRes = await api.get(`/favorites/check/${id}`);
           setIsFavorited(favRes.data.isFavorited);
         } catch (favError) {
           console.error('Favorites check error:', favError);
@@ -60,7 +60,7 @@ export default function ItemDetails() {
       }
       // Fetch related items
       if (res.data.category) {
-        const relatedRes = await api.get('/api/items', {
+        const relatedRes = await api.get('/items', {
           params: { category: res.data.category }
         });
         const filtered = relatedRes.data.filter(i => i._id !== id).slice(0, 3);
@@ -89,12 +89,12 @@ export default function ItemDetails() {
     try {
       console.log('Toggling favorite for item:', id, 'isFavorited:', isFavorited);
       if (isFavorited) {
-        const response = await api.delete(`/api/favorites/${id}`);
+        const response = await api.delete(`/favorites/${id}`);
         console.log('Remove favorite response:', response.data);
         setIsFavorited(false);
         toast.success('Removed from favorites');
       } else {
-        const response = await api.post(`/api/favorites/${id}`);
+        const response = await api.post(`/favorites/${id}`);
         console.log('Add favorite response:', response.data);
         setIsFavorited(true);
         toast.success('Added to favorites');

@@ -24,7 +24,7 @@ export default function Register() {
     e.preventDefault();
     setError(null);
     try {
-      const res = await api.post('/api/auth/register', { name, email, password });
+      const res = await api.post('/auth/register', { name, email, password });
       login(res.data.token, res.data.user);
       // After creating account, show welcome page to collect interests
       navigate('/welcome');

@@ -36,7 +36,7 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      await api.post('/api/auth/reset-password', { token, password });
+      await api.post('/auth/reset-password', { token, password });
       toast.success('Password reset successful! Please log in.');
       navigate('/login');
     } catch (e) {

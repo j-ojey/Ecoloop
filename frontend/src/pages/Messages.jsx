@@ -71,7 +71,7 @@ export default function Messages() {
 
   const loadMessages = async () => {
     try {
-      const res = await api.get(`/api/messages/${user.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get(`/messages/${user.id}`, { headers: { Authorization: `Bearer ${token}` } });
       setMessages(res.data);
     } catch (e) {
       console.error(e);
@@ -82,7 +82,7 @@ export default function Messages() {
     setSelectedConversation(conversation);
     setShowChat(true);
     // Mark messages as read on server and reset local count
-    api.post(`/api/messages/read/${conversation.userId}`)
+    api.post(`/messages/read/${conversation.userId}`)
       .catch(() => {})
       .finally(() => {
         conversation.unreadCount = 0;

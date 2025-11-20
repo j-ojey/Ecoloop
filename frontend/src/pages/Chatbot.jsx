@@ -28,7 +28,7 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const { data } = await api.post('/api/chatbot/chat', { message: userMessage });
+      const { data } = await api.post('/chatbot/chat', { message: userMessage });
       setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
     } catch (error) {
       console.error('Chat error:', error);
