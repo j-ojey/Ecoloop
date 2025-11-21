@@ -53,7 +53,11 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
         const receiverId = msg.receiverId._id || msg.receiverId;
         if ((senderId === recipientId && receiverId === user.id) ||
             (senderId === user.id && receiverId === recipientId)) {
-          setMessages(prev => [...prev, msg]);
+          setMessages(prev => {
+            // Prevent duplicates by checking if message already exists
+            const exists = prev.some(m => m._id === msg._id);
+            return exists ? prev : [...prev, msg];
+          });
         }
       });
       newSocket.on('typing', (data) => {
@@ -116,8 +120,11 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
 
       const response = await api.post('/messages', messageData);
 
-      // Add message to local state immediately
-      setMessages(prev => [...prev, response.data]);
+      // Add to local state with duplicate check
+      setMessages(prev => {
+        const exists = prev.some(m => m._id === response.data._id);
+        return exists ? prev : [...prev, response.data];
+      });
 
       // Emit via socket
       if (socket) {

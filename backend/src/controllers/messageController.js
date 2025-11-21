@@ -5,11 +5,18 @@ export const sendMessage = async (req, res) => {
     const { receiverId, itemId, content } = req.body;
     if (!receiverId || !content) return res.status(400).json({ message: 'Missing fields' });
     const message = await Message.create({ senderId: req.user.id, receiverId, itemId, content, read: false });
+    
+    // Populate the message before sending via socket and response
+    const populatedMessage = await Message.findById(message._id)
+      .populate('senderId', 'name')
+      .populate('receiverId', 'name')
+      .populate('itemId', 'title');
+    
     const io = req.app.get('io');
     if (io) {
-      io.to(receiverId).emit('private_message', message);
+      io.to(receiverId).emit('private_message', populatedMessage);
     }
-    res.status(201).json(message);
+    res.status(201).json(populatedMessage);
   } catch (e) {
     res.status(500).json({ message: 'Server error', error: e.message });
   }
