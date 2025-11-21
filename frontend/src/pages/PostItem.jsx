@@ -45,7 +45,7 @@ const calculateEcoPoints = (category, action = 'create') => {
 };
 
 async function getUploadSignature() {
-  const res = await fetch(`${API_BASE}/uploads/signature`, { method: 'POST' });
+  const res = await fetch(`${API_BASE}/api/uploads/signature`, { method: 'POST' });
   return res.json();
 }
 
