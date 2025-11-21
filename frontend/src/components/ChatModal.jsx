@@ -48,6 +48,7 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
       const newSocket = io(getSocketUrl(), { auth: { token } });
       newSocket.emit('join', user.id);
       newSocket.on('private_message', (msg) => {
+        if (!msg.senderId || !msg.receiverId) return;
         const senderId = msg.senderId._id || msg.senderId;
         const receiverId = msg.receiverId._id || msg.receiverId;
         if ((senderId === recipientId && receiverId === user.id) ||
@@ -91,6 +92,7 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
       const response = await api.get(`/messages/${user.id}`);
       // Filter messages for this conversation
       const conversationMessages = response.data.filter(msg => {
+        if (!msg.senderId || !msg.receiverId) return false;
         const senderId = msg.senderId._id || msg.senderId;
         const receiverId = msg.receiverId._id || msg.receiverId;
         return (senderId === recipientId && receiverId === user.id) ||
@@ -187,6 +189,7 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
   };
 
   const getMessageStatus = (message) => {
+    if (!message.senderId) return null;
     if (message.senderId._id === user.id || message.senderId === user.id) {
       if (message.readAt) {
         return { icon: CheckCheck, color: 'text-blue-500', label: 'Read' };

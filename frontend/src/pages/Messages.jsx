@@ -44,10 +44,18 @@ export default function Messages() {
     const conversationMap = new Map();
 
     messages.forEach(message => {
+      // Skip messages with null sender or receiver
+      if (!message.senderId || !message.receiverId) {
+        console.warn('Skipping message with null sender or receiver:', message);
+        return;
+      }
+
       const senderId = message.senderId._id || message.senderId;
       const receiverId = message.receiverId._id || message.receiverId;
       const otherUserId = senderId === user.id ? receiverId : senderId;
-      const otherUserName = senderId === user.id ? (message.receiverId.name || 'Recipient') : (message.senderId.name || 'Sender');
+      const otherUserName = senderId === user.id 
+        ? (message.receiverId?.name || 'Recipient') 
+        : (message.senderId?.name || 'Sender');
 
       if (!conversationMap.has(otherUserId)) {
         conversationMap.set(otherUserId, {
@@ -103,6 +111,7 @@ export default function Messages() {
         conversation.unreadCount = 0;
         // Optimistically update local messages read flag
         setMessages(prev => prev.map(m => {
+          if (!m.senderId || !m.receiverId) return m;
           const senderId = m.senderId._id || m.senderId;
           const receiverId = m.receiverId._id || m.receiverId;
           if (senderId === conversation.userId && receiverId === user.id) {
@@ -114,6 +123,7 @@ export default function Messages() {
   };
 
   const getMessageStatus = (message) => {
+    if (!message.senderId) return null;
     if (message.senderId._id === user.id || message.senderId === user.id) {
       if (message.readAt) {
         return { icon: CheckCheck, color: 'text-blue-500' };
