@@ -5,7 +5,18 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+// Get API base URL with production fallback
+const getApiBase = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE;
+  }
+  if (window.location.hostname.includes('vercel.app')) {
+    return 'https://ecoloop-backend-ed9e.onrender.com';
+  }
+  return 'http://localhost:4000';
+};
+
+const API_BASE = getApiBase();
 
 // Carbon savings estimates in kg CO2 per item category
 const CARBON_SAVINGS = {
