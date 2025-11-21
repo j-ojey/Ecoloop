@@ -13,7 +13,9 @@ export function AuthProvider({ children }) {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const { token: t, user: u } = JSON.parse(raw);
-      setToken(t); setUser(u);
+      setToken(t); 
+      setUser(u);
+      setAuthToken(t); // Set token immediately when restoring from localStorage
     }
   }, []);
 
@@ -24,7 +26,9 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    setToken(null); setUser(null);
+    setToken(null); 
+    setUser(null);
+    setAuthToken(null); // Clear token from axios headers
     localStorage.removeItem(STORAGE_KEY);
   };
 

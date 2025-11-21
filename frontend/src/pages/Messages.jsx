@@ -36,8 +36,10 @@ export default function Messages() {
   }, [socket, user]);
 
   useEffect(() => {
-    loadMessages();
-  }, [user, token]);
+    if (user?.id && token) {
+      loadMessages();
+    }
+  }, [user?.id, token]);
 
   useEffect(() => {
     // Group messages into conversations
@@ -88,10 +90,11 @@ export default function Messages() {
   }, [messages, user.id]);
 
   const loadMessages = async () => {
+    if (!user?.id) return;
     try {
       setLoading(true);
       setError(null);
-      const res = await api.get(`/messages/${user.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get(`/messages/${user.id}`);
       setMessages(res.data);
     } catch (e) {
       console.error('Failed to load messages:', e);
