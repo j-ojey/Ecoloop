@@ -32,7 +32,13 @@ Welcome to **EcoLoop**! A comprehensive sustainable marketplace platform designe
 
 ## 📸 Screenshots
 
-![Screenshot (1)](#) ![Screenshot (2)](#) ![Screenshot (3)](#) ![Screenshot (4)](#) ![Screenshot (5)](#) ![Screenshot (6)](#)
+<img width="1327" height="878" alt="image" src="https://github.com/user-attachments/assets/f0056316-20d5-47fc-8395-f3a5e05dc0f9" />
+<img width="620" height="826" alt="image" src="https://github.com/user-attachments/assets/e1d0989a-ad0e-4f8d-8f85-c58d93b61b68" />
+<img width="1280" height="885" alt="image" src="https://github.com/user-attachments/assets/99904bf5-2492-4311-85ab-36080f0863c7" />
+<img width="624" height="829" alt="image" src="https://github.com/user-attachments/assets/dbf817ec-9e7f-4223-b679-3a4f7d0c1f97" />
+
+
+
 
 ---
 
