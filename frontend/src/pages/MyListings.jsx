@@ -59,26 +59,26 @@ export default function MyListings() {
     }
 
     try {
+      console.log('Finding user with email:', recipientEmail);
       // Find the recipient user by email
-      const recipientRes = await api.get(`/auth/find-by-email/${encodeURIComponent(recipientEmail)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const recipientRes = await api.get(`/auth/find-by-email/${encodeURIComponent(recipientEmail.trim())}`);
       
       const recipient = recipientRes.data;
+      console.log('Found recipient:', recipient);
 
       if (recipient._id === user?.id) {
         toast.error('You cannot mark yourself as the recipient');
         return;
       }
 
+      console.log('Updating item status:', { selectedItem, selectedStatus, recipientId: recipient._id });
       // Update item status with recipient
-      await api.patch(`/items/${selectedItem}/status`, { 
+      const updateRes = await api.patch(`/items/${selectedItem}/status`, { 
         status: selectedStatus,
         recipientId: recipient._id 
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
+      console.log('Update response:', updateRes.data);
       toast.success(`Item marked as ${selectedStatus}! Both you and ${recipient.name} earned eco-points! 🎉`);
       setItems(items.map(item => 
         item._id === selectedItem ? { ...item, status: selectedStatus, recipientId: recipient._id } : item
@@ -91,10 +91,12 @@ export default function MyListings() {
       setSelectedStatus(null);
     } catch (error) {
       console.error('Status update error:', error);
+      console.error('Error response:', error.response);
       if (error.response?.status === 404) {
         toast.error('User with this email not found. They must be registered on EcoLoop.');
       } else {
-        toast.error(error.response?.data?.message || 'Failed to update item status');
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to update item status';
+        toast.error(errorMessage);
       }
     }
   };
