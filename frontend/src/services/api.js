@@ -11,9 +11,15 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const authData = localStorage.getItem('ecoloop_auth');
       const currentPath = window.location.pathname;
+      const errorMessage = error.response?.data?.message || '';
       
-      // Only redirect if we have auth data and we're not already on an auth page
-      if (authData && !currentPath.match(/^\/(login|register|forgot-password|reset-password)$/)) {
+      // Only redirect if:
+      // 1. We have auth data stored
+      // 2. We're not on an auth page
+      // 3. The error is about token expiration/invalidity (not just missing auth)
+      if (authData && 
+          !currentPath.match(/^\/(login|register|forgot-password|reset-password)$/) &&
+          (errorMessage.includes('expired') || errorMessage.includes('invalid') || errorMessage.includes('token'))) {
         localStorage.removeItem('ecoloop_auth');
         window.location.href = '/login';
       }
