@@ -64,13 +64,15 @@ export default function Discover() {
         town: town || undefined,
         condition: condition || undefined,
         minPrice: minPrice || undefined,
-        maxPrice: maxPrice || undefined
-        ,sortBy: sortBy || undefined,
+        maxPrice: maxPrice || undefined,
+        sortBy: sortBy || undefined,
         lat: sortBy === 'nearest' && lat ? lat : undefined,
         lng: sortBy === 'nearest' && lng ? lng : undefined,
         radiusKm: sortBy === 'nearest' && radiusKm ? radiusKm : undefined
       } });
-      setItems(res.data);
+      // Filter out sold and exchanged items
+      const availableItems = res.data.filter(item => item.status === 'available');
+      setItems(availableItems);
     } catch (e) {
       console.error(e);
     } finally {
@@ -90,7 +92,9 @@ export default function Discover() {
   async function fetchRecommendations() {
     try {
       const res = await api.get('/items/recommendations');
-      setRecommendations(res.data);
+      // Filter out sold and exchanged items from recommendations
+      const availableRecs = res.data.filter(item => item.status === 'available');
+      setRecommendations(availableRecs);
     } catch (e) {
       console.error('Failed to fetch recommendations:', e);
     }
