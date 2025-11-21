@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="ecoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Circle background -->
+  <circle cx="50" cy="50" r="48" fill="url(#ecoGradient)"/>
+  
+  <!-- Recycling arrows forming a loop -->
+  <path d="M 35 30 Q 25 30 25 40 L 25 50 Q 25 60 35 60 L 45 60" 
+        fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 65 70 Q 75 70 75 60 L 75 50 Q 75 40 65 40 L 55 40" 
+        fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 50 25 L 50 35 Q 50 40 55 40 L 65 40" 
+        fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Arrows -->
+  <polygon points="42,57 48,60 42,63" fill="white"/>
+  <polygon points="58,43 52,40 58,37" fill="white"/>
+  <polygon points="47,28 50,22 53,28" fill="white"/>
+  
+  <!-- Leaf accent -->
+  <path d="M 45 50 Q 48 45 50 50 Q 48 55 45 50 Z" fill="white" opacity="0.8"/>
+</svg>
