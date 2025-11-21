@@ -71,6 +71,18 @@ export default function PostItem() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    
+    // Validation
+    if (!form.town || form.town.trim() === '') {
+      toast.error('Please select a town');
+      return;
+    }
+    
+    if (form.town === 'Other' && (!customTown || customTown.trim() === '')) {
+      toast.error('Please enter a town name');
+      return;
+    }
+    
     setSaving(true);
     try {
       let imageUrl;
@@ -78,15 +90,22 @@ export default function PostItem() {
         const up = await uploadToCloudinary(file);
         imageUrl = up.secure_url;
       }
-      const body = { ...form, price: Number(form.price || 0), imageUrl };
-      if (form.town === 'Other' && customTown.trim()) {
-        body.town = customTown.trim();
-      }
-      await api.post('/items', body, { headers: { Authorization: `Bearer ${token}` } });
+      
+      const townValue = form.town === 'Other' ? customTown.trim() : form.town;
+      
+      const body = { 
+        ...form, 
+        town: townValue,
+        price: Number(form.price || 0), 
+        imageUrl 
+      };
+      
+      await api.post('/items', body);
       const ecoPointsEarned = calculateEcoPoints(form.category, 'create');
       toast.success(`Item posted successfully! +${ecoPointsEarned} eco-points earned for saving ~${CARBON_SAVINGS[form.category] || 5}kg CO₂! 🌱`);
       window.location.href = '/discover';
     } catch (e) {
+      console.error('Post item error:', e);
       toast.error(e.response?.data?.message || 'Failed to post item');
     } finally {
       setSaving(false);
@@ -172,15 +191,25 @@ export default function PostItem() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">📍 Town</label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">📍 Town <span className="text-red-500">*</span></label>
             <div className="flex gap-2 items-center">
-              <select value={form.town} onChange={e=>setForm({...form, town: e.target.value})} className="input-field max-w-xs">
+              <select 
+                value={form.town} 
+                onChange={e=>setForm({...form, town: e.target.value})} 
+                className="input-field max-w-xs"
+                required
+              >
                 <option value="">Select town</option>
                 {towns.map(t => <option key={t} value={t}>{t}</option>)}
-                <option value="Other">Other</option>
               </select>
               {form.town === 'Other' && (
-                <input value={customTown} onChange={e=>setCustomTown(e.target.value)} placeholder="Enter town name" className="input-field" />
+                <input 
+                  value={customTown} 
+                  onChange={e=>setCustomTown(e.target.value)} 
+                  placeholder="Enter town name" 
+                  className="input-field"
+                  required
+                />
               )}
             </div>
           </div>
