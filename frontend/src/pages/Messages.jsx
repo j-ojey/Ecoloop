@@ -5,7 +5,15 @@ import { useAuth } from '../context/AuthContext.jsx';
 import ChatModal from '../components/ChatModal.jsx';
 import { MessageCircle, Search, User, Check, CheckCheck } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE;
+  }
+  if (window.location.hostname.includes('vercel.app')) {
+    return 'https://ecoloop-backend-ed9e.onrender.com';
+  }
+  return 'http://localhost:4000';
+};
 
 export default function Messages() {
   const { user, token } = useAuth();
@@ -14,7 +22,9 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showChat, setShowChat] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const socket = useMemo(() => io(API_BASE, { auth: { token } }), [token]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const socket = useMemo(() => io(getSocketUrl(), { auth: { token } }), [token]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -71,10 +81,15 @@ export default function Messages() {
 
   const loadMessages = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const res = await api.get(`/messages/${user.id}`, { headers: { Authorization: `Bearer ${token}` } });
       setMessages(res.data);
     } catch (e) {
-      console.error(e);
+      console.error('Failed to load messages:', e);
+      setError(e.response?.data?.message || 'Failed to load messages');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,6 +129,32 @@ export default function Messages() {
   const filteredConversations = conversations.filter(conversation =>
     conversation.userName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 dark:text-white">Messages</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading messages...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 dark:text-white">Messages</h1>
+        <div className="card p-8 text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+          <button onClick={loadMessages} className="btn-primary">Try Again</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">

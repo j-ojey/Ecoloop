@@ -4,7 +4,15 @@ import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { MessageCircle, Send, X, User, Check, CheckCheck } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE;
+  }
+  if (window.location.hostname.includes('vercel.app')) {
+    return 'https://ecoloop-backend-ed9e.onrender.com';
+  }
+  return 'http://localhost:4000';
+};
 
 export default function ChatModal({ isOpen, onClose, recipientId, recipientName, itemId, itemTitle }) {
   const { user, token } = useAuth();
@@ -37,7 +45,7 @@ export default function ChatModal({ isOpen, onClose, recipientId, recipientName,
       setLoading(true);
 
       // Initialize socket connection
-      const newSocket = io(API_BASE, { auth: { token } });
+      const newSocket = io(getSocketUrl(), { auth: { token } });
       newSocket.emit('join', user.id);
       newSocket.on('private_message', (msg) => {
         const senderId = msg.senderId._id || msg.senderId;

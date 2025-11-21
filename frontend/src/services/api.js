@@ -8,10 +8,15 @@ export const api = axios.create({ baseURL: API_URL });
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && error.response?.data?.message?.includes('expired')) {
-      // Token expired - clear local storage and reload
-      localStorage.removeItem('ecoloop_auth');
-      window.location.href = '/login';
+    if (error.response?.status === 401) {
+      const authData = localStorage.getItem('ecoloop_auth');
+      const currentPath = window.location.pathname;
+      
+      // Only redirect if we have auth data and we're not already on an auth page
+      if (authData && !currentPath.match(/^\/(login|register|forgot-password|reset-password)$/)) {
+        localStorage.removeItem('ecoloop_auth');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
